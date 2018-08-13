@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package dynamic_dns_update_client;
 
 import java.io.BufferedReader;
@@ -19,18 +14,20 @@ import java.util.Calendar;
  */
 public class Dynamic_DNS_Update_Client {
 
-    public static final int SLEEP_MSEC = 5000;
-    private static final String PASSWORD = "TODO: Here goes your password.";
+    public static final int SLEEP_TIME = 5000;
+    
+    private static final String USER = "usr";
+    private static final String PASSWORD = "pswd";
+    private static final String DOMAIN = "domain";
     
     public static String myCurrentIP = null;
     
     /**
      * @param args the command line arguments
-     * @throws java.lang.InterruptedException
      */
     public static void main(String[] args) {
         
-        Log.WriteAppStarted();
+        WriteConsole("App Started");
         
         while(true)
         {
@@ -40,7 +37,7 @@ public class Dynamic_DNS_Update_Client {
             { System.out.println(e.getMessage()); }
             
             try
-            { Thread.sleep(SLEEP_MSEC); }
+            { Thread.sleep(SLEEP_TIME); }
             catch(InterruptedException e)
             { System.out.println(e.getMessage()); }
         }   
@@ -63,16 +60,10 @@ public class Dynamic_DNS_Update_Client {
             //           OR
             // THE SERVER IS OFFLINE
             
-            Log.WriteConsole("Could not connect to server.");
+            WriteConsole("Could not connect to server: " + e.getMessage());
             
             return;
         }
-        
-        URLBuilder urlBuilder = new URLBuilder("yourdomain.dynu.net",
-                                               myIP,
-                                               PASSWORD);
-        
-        
         if(myCurrentIP == null)
         {   
             myCurrentIP = myIP;
@@ -82,10 +73,12 @@ public class Dynamic_DNS_Update_Client {
         
         if(firstUse)
         {
-            String response = changeIP(urlBuilder.GetURL());
+            String response = changeIP("https://dynamicdns.gear.host/api/set.php?domain=" + DOMAIN + 
+                                                                           "&ip=" + myIP + 
+                                                                           "&user=" + USER + 
+                                                                           "&password=" + PASSWORD);
             
-            Log.Write(response);
-            Log.WriteConsole(response);
+            WriteConsole(response);
             
             firstUse = false;
         }
@@ -94,23 +87,29 @@ public class Dynamic_DNS_Update_Client {
         
         if(!myCurrentIP.equals(myIP)) // Our public IP has been changed.
         {
-            String response = changeIP(urlBuilder.GetURL());
+            String response = changeIP("https://dynamicdns.gear.host/api/set.php?domain=" + DOMAIN + 
+                                                                            "&ip=" + myIP + 
+                                                                            "&user=" + USER + 
+                                                                            "&password=" + PASSWORD);
             
-            Log.Write(response);
-            Log.WriteConsole(response);
+            WriteConsole(response);
         }
         else
         {
-            System.out.println("[" + new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss").format(Calendar.getInstance().getTime()) + "] " + "No change.");
+            WriteConsole("No change");
         }
-            
-        
-        
-        
-        
     }
    
     /**
+     * Writes log to console
+     * @param content
+     */
+    public static void WriteConsole(String content) {
+        System.out.println("[" + new SimpleDateFormat("yyyy.MM.dd_HH.mm.ss").format(Calendar.getInstance().getTime()) + "] " + content);
+    }
+    
+    /**
+     * Send a Request to server to change IP.
      * @param url URL connection
      * @return Response from the DYNU(or whatever server you are using).
      * @throws Exception 
@@ -132,6 +131,11 @@ public class Dynamic_DNS_Update_Client {
         return response.toString();
     }
     
+    /**
+     * Send a Request to get current IP.
+     * @return
+     * @throws Exception
+     */
     public static String getIP() throws Exception {
         URL whatismyip = new URL("http://checkip.amazonaws.com");
         BufferedReader in = null;
@@ -150,48 +154,6 @@ public class Dynamic_DNS_Update_Client {
                 }
             }
         }
-    }
-    
-    public static class URLBuilder {
-
-        private String hostname;
-        private String myip;
-        private String password;
-        
-        URLBuilder(String hostname, String myip, String password) {
-            this.hostname = hostname;
-            this.myip = myip;
-            this.password = password;
-        }
-        
-        public String GetURL() {
-            return "https://api.dynu.com/nic/update?hostname=" + hostname + 
-                                                   "&myip=" + myip + 
-                                                   "&password=" + password;            
-        }
-        
-        
-        public String gethostname() {
-            return hostname;
-        }
-        public void sethostname(String hostname) {
-            this.hostname = hostname;
-        }
-             
-        public String getmyip() {
-            return myip;
-        }
-        public void setmyip(String myip) {
-            this.myip = myip;
-        }
-        
-        public String getpassword() {
-            return password;
-        }
-        public void setpassword(String password) {
-            this.password = password;
-        }
-        
     }
     
 }
